@@ -1,0 +1,9 @@
+/testing/
+/vendor/
+composer.lock
+.idea
+*.patch
+data
+__*
+.DS_Store
+Thumbs.db
