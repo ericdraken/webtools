@@ -14,6 +14,78 @@ use Draken\WebTools\Utils\LoggableBase;
 use Symfony\Component\Process\Process;
 
 /**
+ * Tidy File manipulation (https://github.com/htacg/tidy-html5/)
+-----------------
+-output <file>, -o <file>  write output to the specified <file>
+-config <file>             set configuration options from the specified <file>
+-file <file>, -f <file>    write errors and warnings to the specified <file>
+-modify, -m                modify the original input files
+
+Processing directives
+---------------------
+-indent, -i                indent element content
+-wrap <column>, -w         wrap text at the specified <column>. 0 is assumed
+<column>                   if <column> is missing. When this option is
+                           omitted, the default of the configuration option
+                           'wrap' applies.
+-upper, -u                 force tags to upper case
+-clean, -c                 replace FONT, NOBR and CENTER tags with CSS
+-bare, -b                  strip out smart quotes and em dashes, etc.
+-gdoc, -g                  produce clean version of html exported by Google Docs
+-numeric, -n               output numeric rather than named entities
+-errors, -e                show only errors and warnings
+-quiet, -q                 suppress nonessential output
+-omit                      omit optional start tags and end tags
+-xml                       specify the input is well formed XML
+-asxml, -asxhtml           convert HTML to well formed XHTML
+-ashtml                    force XHTML to well formed HTML
+-access <level>            do additional accessibility checks (<level> = 0,
+                           1, 2, 3). 0 is assumed if <level> is missing.
+
+Character encodings
+-------------------
+-raw                       output values above 127 without conversion to entities
+-ascii                     use ISO-8859-1 for input, US-ASCII for output
+-latin0                    use ISO-8859-15 for input, US-ASCII for output
+-latin1                    use ISO-8859-1 for both input and output
+-iso2022                   use ISO-2022 for both input and output
+-utf8                      use UTF-8 for both input and output
+-mac                       use MacRoman for input, US-ASCII for output
+-win1252                   use Windows-1252 for input, US-ASCII for output
+-ibm858                    use IBM-858 (CP850+Euro) for input, US-ASCII for output
+-utf16le                   use UTF-16LE for both input and output
+-utf16be                   use UTF-16BE for both input and output
+-utf16                     use UTF-16 for both input and output
+-big5                      use Big5 for both input and output
+-shiftjis                  use Shift_JIS for both input and output
+
+Miscellaneous
+-------------
+-version, -v               show the version of Tidy
+-help, -h, -?              list the command line options
+-help-config               list all configuration options
+-help-env                  show information about the environment and runtime configuration
+-show-config               list the current configuration settings
+-export-config             list the current configuration settings, suitable
+                           for a config file
+-export-default-config     list the default configuration settings, suitable
+                           for a config file
+-help-option <option>      show a description of the <option>
+-language <lang>           set Tidy's output language to <lang>. Specify
+                           '-language help' for more help. Use before
+                           output-causing arguments to ensure the language
+                           takes effect, e.g.,`tidy -lang es -lang help`.
+
+XML
+---
+-xml-help                  list the command line options in XML format
+-xml-config                list all configuration options in XML format
+-xml-strings               output all of Tidy's strings in XML format
+-xml-error-strings         output error constants and strings in XML format
+-xml-options-strings       output option descriptions in XML format
+*/
+
+/**
  * Class HTML5Tidy
  * Run an analysis on an HTML string to return warnings and errors
  *
@@ -21,9 +93,12 @@ use Symfony\Component\Process\Process;
  */
 class HTML5Tidy extends LoggableBase
 {
+	const MIN_TIDY_VERSION = '5.4.0';
+
 	private static $isTidyInstalled = null;
 
 	private static $defaults = [
+		// '--file errors.log', //  Save errors to this log file as well as stdout
 		'--show-errors 20',
 		'--show-warnings yes',
 		'--show-info no',
@@ -56,12 +131,13 @@ class HTML5Tidy extends LoggableBase
 	 * This does not return tidied HTML. It is just an analysis
 	 *
 	 * @param string $html
+	 * @param string|null $output
 	 * @param array $args
 	 * @param int $timeout
 	 *
 	 * @return int
 	 */
-	public function runTidy( string $html, array $args = [], int $timeout = 4 )
+	public function runTidy( string $html, string $output = null, array $args = [], int $timeout = 4 )
 	{
 		// Nothing to do if not installed
 		if ( ! self::isTidyHtml5Installed() ) {
@@ -73,16 +149,35 @@ class HTML5Tidy extends LoggableBase
 			throw new InvalidArgumentException( "Nothing to do with an empty HTML string" );
 		}
 
+		// No output by default
+		if ( is_null( $output ) ) {
+			$output = '/dev/null';
+		} else {
+			$output = escapeshellarg( $output );
+		}
+
+		// Security check
+		if ( stripos( $output, '.php' ) !== false ) {
+			throw new InvalidArgumentException( "Output file cannot have a PHP extensions" );
+		}
+
+		// Build the command
+		$argstr = implode( ' ', array_merge( self::$defaults, $args ) );
+		$cmd = "\$(which tidy) -quiet -o $output $argstr";
+
+		// Args security check
+		if ( preg_match( '/-o\s|-output\s/i', $argstr ) ) {
+			throw new InvalidArgumentException( "Please do not specify an output file manually" );
+		}
+
 		// Setup a process to run tidy and return the warnings/errors
-		$tidyProc = new Process(
-			'$(which tidy) -quiet ' . implode( ' ', array_merge( self::$defaults, $args ) ),
-			null, null, null, $timeout );
+		$tidyProc = new Process( $cmd,null, null, null, $timeout );
 
 		// Pipe in the HTML string directly to the tidy process
 		/** @noinspection PhpParamsInspection */
 		$tidyProc->setInput( $html );
 
-		// Run the tidy command
+		// Run the tidy command (blocking)
 		$code = $tidyProc->run();
 
 		// 0 - OK
@@ -209,9 +304,9 @@ class HTML5Tidy extends LoggableBase
 		$ver = explode( ' ', trim( $res ) );
 		$ver = end( $ver );
 
-		if ( version_compare( $ver, '5.0.0' ) !== 1 )
+		if ( version_compare( $ver, self::MIN_TIDY_VERSION ) !== 1 )
 		{
-			self::logger()->error( "Tidy version too old. Minimum version 5.x required. Got: $ver" );
+			self::logger()->error( "Tidy version too old. Minimum version ".self::MIN_TIDY_VERSION." required. Got: $ver" );
 			return false;
 		}
 
