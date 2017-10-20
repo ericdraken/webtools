@@ -6,11 +6,10 @@
  * Copyright (c) 2017
  */
 
-namespace DrakenTest\ChromeCrawler\Utils;
+namespace DrakenTest\WebTools\Network;
 
 use Draken\WebTools\Utils\URL;
 use Draken\WebTools\Network\Sitemap;
-use DrakenTest\ChromeCrawler\Network\NetworkTestFixture;
 
 class SitemapTest extends NetworkTestFixture
 {

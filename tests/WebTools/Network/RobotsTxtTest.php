@@ -9,7 +9,6 @@
 namespace DrakenTest\WebTools\Network;
 
 use Draken\WebTools\Network\RobotsTxt;
-use DrakenTest\ChromeCrawler\Network\NetworkTestFixture;
 
 class RobotsTxtTest extends NetworkTestFixture
 {

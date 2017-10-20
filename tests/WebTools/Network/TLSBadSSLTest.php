@@ -8,8 +8,6 @@
 
 namespace DrakenTest\WebTools\Network;
 
-use DrakenTest\ChromeCrawler\Network\NetworkTestFixture;
-
 class TLSBadSSLTest extends NetworkTestFixture
 {
 	/**

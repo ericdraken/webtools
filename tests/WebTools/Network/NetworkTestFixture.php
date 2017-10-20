@@ -6,7 +6,7 @@
  * Copyright (c) 2017
  */
 
-namespace DrakenTest\ChromeCrawler\Network;
+namespace DrakenTest\WebTools\Network;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;

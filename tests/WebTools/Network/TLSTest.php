@@ -9,7 +9,6 @@
 namespace DrakenTest\WebTools\Network;
 
 use Draken\WebTools\Network\TLS;
-use DrakenTest\ChromeCrawler\Network\NetworkTestFixture;
 
 class TLSTest extends NetworkTestFixture
 {
