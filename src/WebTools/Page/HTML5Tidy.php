@@ -6,7 +6,7 @@
  * Copyright (c) 2017
  */
 
-namespace Draken\WebTools\Tools;
+namespace Draken\WebTools\Page;
 
 use Draken\WebTools\Exceptions\InvalidArgumentException;
 use Draken\WebTools\Exceptions\RuntimeException;
