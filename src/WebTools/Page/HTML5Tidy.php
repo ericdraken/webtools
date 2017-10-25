@@ -128,16 +128,17 @@ class HTML5Tidy extends LoggableBase
 	/**
 	 * Perform a Tidy analysis on the HTML, returning a status code.
 	 * 0 = no problems, 1 = warnings present, 2 = warnings and errors found
-	 * This does not return tidied HTML. It is just an analysis
+	 * If no errors were found, then a tidied version of the HTML will be
+	 * saved to $output
 	 *
 	 * @param string $html
-	 * @param string|null $output
+	 * @param string $output
 	 * @param array $args
 	 * @param int $timeout
 	 *
 	 * @return int
 	 */
-	public function runTidy( string $html, string $output = null, array $args = [], int $timeout = 4 )
+	public function runTidy( string $html, string &$output = null, array $args = [], int $timeout = 4 )
 	{
 		// Nothing to do if not installed
 		if ( ! self::isTidyHtml5Installed() ) {
@@ -149,21 +150,12 @@ class HTML5Tidy extends LoggableBase
 			throw new InvalidArgumentException( "Nothing to do with an empty HTML string" );
 		}
 
-		// No output by default
-		if ( is_null( $output ) ) {
-			$output = '/dev/null';
-		} else {
-			$output = escapeshellarg( $output );
-		}
-
-		// Security check
-		if ( stripos( $output, '.php' ) !== false ) {
-			throw new InvalidArgumentException( "Output file cannot have a PHP extensions" );
-		}
+		// Temp file
+		$tmp = tempnam(sys_get_temp_dir(), 'tidy');
 
 		// Build the command
 		$argstr = implode( ' ', array_merge( self::$defaults, $args ) );
-		$cmd = "\$(which tidy) -quiet -o $output $argstr";
+		$cmd = "\$(which tidy) -quiet -o $tmp $argstr";
 
 		// Args security check
 		if ( preg_match( '/-o\s|-output\s/i', $argstr ) ) {
@@ -214,6 +206,10 @@ class HTML5Tidy extends LoggableBase
 				}
 			}
 		}
+
+		// Set the tidy output if available
+		$output = file_get_contents( $tmp ) ?: '';
+		unlink( $tmp );
 
 		return $code;
 	}

@@ -29,7 +29,7 @@ class HTML5TidyTest extends TestCase
 HTML;
 
 		$tidy = new HTML5Tidy();
-		$code = $tidy->runTidy( $html, null, [], 4 );
+		$code = $tidy->runTidy( $html, $output, [], 4 );
 		$this->assertEquals( 0, $code );
 	}
 
@@ -48,7 +48,7 @@ HTML;
 HTML;
 
 		$tidy = new HTML5Tidy();
-		$code = $tidy->runTidy( $html, null, [], 4 );
+		$code = $tidy->runTidy( $html, $output, [], 4 );
 		$this->assertEquals( 1, $code );
 	}
 
@@ -68,27 +68,10 @@ HTML;
 HTML;
 
 		$tidy = new HTML5Tidy();
-		$code = $tidy->runTidy( $html, null, [], 4 );
+		$code = $tidy->runTidy( $html, $output, [], 4 );
 		$this->assertEquals( 2, $code );
-	}
 
-	// .php extension is not allowed
-	public function testTidyInvalidOutFilename()
-	{
-		$tidy = new HTML5Tidy();
-		$this->expectException( InvalidArgumentException::class );
-		$tidy->runTidy( '', 'file.php', [], 4 );
-	}
-
-	// Test an output file can be written
-	public function testTidyValidOutFilename()
-	{
-		$out = '/tmp/testTidyValidOutFilename.txt';
-		$tidy = new HTML5Tidy();
-		$tidy->runTidy( '<html></html>', $out, [], 4 );
-
-		$this->assertFileExists( $out );
-		unlink( $out );
+		// TODO: Test $output
 	}
 
 	// Test user-supplied output file param throws an exception
@@ -97,7 +80,7 @@ HTML;
 		$out = '/tmp/testTidyInvalidArgument.txt';
 		$tidy = new HTML5Tidy();
 		$this->expectException( InvalidArgumentException::class );
-		$tidy->runTidy( '', null, [
+		$tidy->runTidy( '', $output, [
 			'-o '.$out
 		], 4 );
 		$this->assertFileNotExists( $out );
@@ -109,7 +92,7 @@ HTML;
 		$out = '/tmp/testTidyInvalidArgument2.txt';
 		$tidy = new HTML5Tidy();
 		$this->expectException( InvalidArgumentException::class );
-		$tidy->runTidy( '', null, [
+		$tidy->runTidy( '', $output, [
 			'-o     '.$out
 		], 4 );
 		$this->assertFileNotExists( $out );
@@ -121,7 +104,7 @@ HTML;
 		$out = '/tmp/testTidyInvalidArgument3.txt';
 		$tidy = new HTML5Tidy();
 		$this->expectException( InvalidArgumentException::class );
-		$tidy->runTidy( '', null, [
+		$tidy->runTidy( '', $output, [
 			'-output '.$out
 		], 4 );
 		$this->assertFileNotExists( $out );
@@ -133,7 +116,7 @@ HTML;
 		$out = '/tmp/testTidyInvalidArgument4.txt';
 		$tidy = new HTML5Tidy();
 		$this->expectException( InvalidArgumentException::class );
-		$tidy->runTidy( '', null, [
+		$tidy->runTidy( '', $output, [
 			'-output       '.$out
 		], 4 );
 		$this->assertFileNotExists( $out );
@@ -145,7 +128,7 @@ HTML;
 		$out = '/tmp/testTidyInvalidArgument5.txt';
 		$tidy = new HTML5Tidy();
 		$this->expectException( InvalidArgumentException::class );
-		$tidy->runTidy( '', null, [
+		$tidy->runTidy( '', $output, [
 			'--output   '.$out
 		], 4 );
 		$this->assertFileNotExists( $out );
