@@ -108,13 +108,28 @@ class Sitemap extends LoggableBase
 			$crawler = new Crawler();
 
 			$content = $response->getBody()->getContents();
+
+			// Capture internal parsing errors
+			$internalErrors = libxml_use_internal_errors(true);
+
 			$crawler->addXmlContent( $content );
+
+			// Get and clear any errors
+			$errorsArr = libxml_get_errors();
+			libxml_clear_errors();
+			libxml_use_internal_errors( $internalErrors );
 
 			// The XPath is done this way to ignore the namespace
 			// REF: https://stackoverflow.com/questions/5239685/xml-namespace-breaking-my-xpath
 			$crawler->filterXPath( "//*[name()='loc']" )->each( function ( Crawler $node ) use ( &$pages ) {
 				$pages[] = $node->getNode( 0 )->nodeValue;
 			} );
+
+			// "DTD missing" is always going to be a problem,
+			// so only include warnings if there are no pages found
+			if ( empty( $pages ) && ! empty( $errorsArr ) ) {
+				self::logger()->warning( "Sitemap XML validation errors: " . print_r( $errorsArr, true ) );
+			}
 
 			// Remove duplicates
 			$pages = array_unique( $pages, SORT_REGULAR );
