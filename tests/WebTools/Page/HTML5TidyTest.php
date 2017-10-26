@@ -52,6 +52,10 @@ HTML;
 		$this->assertEquals( 1, $code );
 	}
 
+	/**
+	 * An error code of 2 and an empty html
+	 * output should be returned
+	 */
 	public function testHTML5Errors()
 	{
 		$html = <<<'HTML'
@@ -70,8 +74,7 @@ HTML;
 		$tidy = new HTML5Tidy();
 		$code = $tidy->runTidy( $html, $output, [], 4 );
 		$this->assertEquals( 2, $code );
-
-		// TODO: Test $output
+		$this->assertEmpty( $output );
 	}
 
 	// Test user-supplied output file param throws an exception
