@@ -266,7 +266,7 @@ HTML;
 	}
 
 	/**
-	 * Test that html tag diff can be found
+	 * Test that only changes are returned
 	 */
 	public function testGetHtmlDiffChangesArray()
 	{
@@ -298,5 +298,191 @@ HTML;
 		$this->assertEquals( HTMLDiff::REMOVED, $res[0][1] );
 		$this->assertEquals( HTMLDiff::ADDED, $res[1][1] );
 		$this->assertContains( '<title>Joker</title>', $res[1][0] );
+	}
+
+	/**
+	 * Test the percent of lines changed
+	 */
+	public function testGetPercentLinesChangedOneLineChanged()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+3
+4
+5
+6
+7
+8
+9
+</body>
+</html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+3
+4
+5
+6---
+7
+8
+9
+</body>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedLinesChangedPercent( $from, $to, 'html' );
+
+		$this->assertEquals( 1/10, $res );
+	}
+
+	/**
+	 * Test the percent of lines changed
+	 */
+	public function testGetPercentLinesChangedOneLineChangedReversed()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+3
+4
+5
+6---
+7
+8
+9
+</body>
+</html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+3
+4
+5
+6
+7
+8
+9
+</body>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedLinesChangedPercent( $from, $to, 'html' );
+
+		$this->assertEquals( 1/10, $res );
+	}
+
+	/**
+	 * Test the percent of lines changed
+	 */
+	public function testGetPercentLinesChanged50PercentChanged()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+3
+4
+5
+6
+7
+8
+9
+</body>
+</html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+3
+4---
+5---
+6---
+7---
+8---
+9
+</body>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedLinesChangedPercent( $from, $to, 'html' );
+
+		$this->assertEquals( 5/10, $res );
+	}
+
+	/**
+	 * Test the percent of lines changed - no changes
+	 */
+	public function testGetPercentLinesChangedNoChanges()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+</html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedLinesChangedPercent( $from, $to, 'html' );
+
+		$this->assertEquals( 0, $res );
+	}
+
+	/**
+	 * Test the percent of lines changed - all changed
+	 */
+	public function testGetPercentLinesChangedAllChanged()
+	{
+		$from = '';
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>Head</head>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedLinesChangedPercent( $from, $to, 'html' );
+
+		$this->assertEquals( 1.0, $res );
+	}
+
+	/**
+	 * Test the percent of lines changed - no strings
+	 */
+	public function testGetPercentLinesChangedNothing()
+	{
+		$from = '';
+		$to = '';
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedLinesChangedPercent( $from, $to, 'html' );
+
+		$this->assertEquals( 0.0, $res );
 	}
 }

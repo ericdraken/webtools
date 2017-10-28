@@ -58,7 +58,6 @@ class HTMLDiff extends LoggableBase
 		// Get the to HTML
 		$to = $this->getSelectedHtml( $toHtml, $selector ) ?: '';
 
-
 		$differ = new Differ;
 		return $differ->diffToArray( $from, $to );
 	}
@@ -75,6 +74,43 @@ class HTMLDiff extends LoggableBase
 	public function getSelectedDiffChangesArray( string $fromHtml, string $toHtml, string $selector )
 	{
 		$diffs = $this->getSelectedDiffArray( $fromHtml, $toHtml, $selector );
+		return $this->getOnlyChangedLines( $diffs );
+	}
+
+	/**
+	 * Return the percent of lines that changed
+	 * @param string $fromHtml
+	 * @param string $toHtml
+	 * @param string $selector
+	 *
+	 * @return float
+	 */
+	public function getSelectedLinesChangedPercent( string $fromHtml, string $toHtml, string $selector ): float
+	{
+		$before = count( $this->getSelectedDiffArray( '', $fromHtml, $selector ) );
+		$after = count( $this->getSelectedDiffArray( $fromHtml, $toHtml, $selector ) );
+
+		// Both are empty strings - no changes
+		if ( $before === 0 && $after === 0 ) {
+			return 0.0;
+		}
+
+		// Going from nothing to something or vice versa is a 100% change
+		if ( $before === 0 || $after === 0 ) {
+			return 1.0;
+		}
+
+		return abs( $after - $before ) / $before;
+	}
+
+	/**
+	 * Get only changed lines from a diff results array
+	 * @param array $diffs
+	 *
+	 * @return array
+	 */
+	private function getOnlyChangedLines( array $diffs )
+	{
 		return array_values(    // Reset the indices
 			array_filter( $diffs, function( $elem ) {
 				return $elem[1] !== self::UNCHANGED;
