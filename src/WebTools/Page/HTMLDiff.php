@@ -8,9 +8,9 @@
 
 namespace Draken\WebTools\Page;
 
+use Draken\WebTools\Utils\HTML;
 use Draken\WebTools\Utils\LoggableBase;
 use SebastianBergmann\Diff\Differ;
-use Symfony\Component\DomCrawler\Crawler;
 
 class HTMLDiff extends LoggableBase
 {
@@ -32,10 +32,10 @@ class HTMLDiff extends LoggableBase
 	public function getSelectedDiffTextual( string $fromHtml, string $toHtml, string $selector ): string
 	{
 		// Get the from HTML
-		$from = $this->getSelectedHtml( $fromHtml, $selector ) ?: '';
+		$from = HTML::getSelectedHtml( $fromHtml, $selector ) ?: '';
 
 		// Get the to HTML
-		$to = $this->getSelectedHtml( $toHtml, $selector ) ?: '';
+		$to = HTML::getSelectedHtml( $toHtml, $selector ) ?: '';
 
 		$differ = new Differ;
 		return $differ->diff( $from, $to );
@@ -53,10 +53,10 @@ class HTMLDiff extends LoggableBase
 	public function getSelectedDiffArray( string $fromHtml, string $toHtml, string $selector )
 	{
 		// Get the from HTML
-		$from = $this->getSelectedHtml( $fromHtml, $selector ) ?: '';
+		$from = HTML::getSelectedHtml( $fromHtml, $selector ) ?: '';
 
 		// Get the to HTML
-		$to = $this->getSelectedHtml( $toHtml, $selector ) ?: '';
+		$to = HTML::getSelectedHtml( $toHtml, $selector ) ?: '';
 
 		$differ = new Differ;
 		return $differ->diffToArray( $from, $to );
@@ -116,28 +116,6 @@ class HTMLDiff extends LoggableBase
 				return $elem[1] !== self::UNCHANGED;
 			} )
 		);
-	}
-
-	/**
-	 * Get the selected part of the html if present
-	 *
-	 * @param string $html
-	 *
-	 * @param string $selector
-	 *
-	 * @return string|bool
-	 */
-	protected function getSelectedHtml( string $html, string $selector )
-	{
-		// Get the from body HTML
-		$crawler = new Crawler();
-		$crawler->addHtmlContent( $html );
-		$elem = $crawler->filter( $selector );
-		if ( $elem->count() ) {
-			return $elem->html();
-		}
-
-		return false;
 	}
 
 	/**
