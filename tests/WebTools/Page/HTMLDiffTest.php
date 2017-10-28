@@ -8,16 +8,9 @@
 
 namespace DrakenTest\WebTools\Page;
 
-use cogpowered\FineDiff\Diff as FineDiff;
-use cogpowered\FineDiff\Granularity\Character;
-use cogpowered\FineDiff\Granularity\Paragraph;
-use cogpowered\FineDiff\Granularity\Sentence;
-use cogpowered\FineDiff\Granularity\Word;
-use cogpowered\FineDiff\Render\Html;
 use Draken\WebTools\Page\HTMLDiff;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use SebastianBergmann\Diff\Differ;
 
 class HTMLDiffTest extends TestCase
 {
@@ -108,38 +101,167 @@ class HTMLDiffTest extends TestCase
 		$this->assertEquals( 0, $ratio );
 	}
 
+	/////////////////////
 
-
-
-
-
-
-	public function testDiffEngine()
+	/**
+	 * Test that body tag diff can be found
+	 */
+	public function testGetBodyDiffArray()
 	{
-		$differ = new Differ;
-		$diff= $differ->diffToArray('string one', 'string two');
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+abc
+</body>
+</html>
+HTML;
 
-		var_export( $diff );
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+def
+</body>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedDiffArray( $from, $to, 'body' );
+		$this->assertCount( 3, $res );
+		$this->assertEquals( HTMLDiff::REMOVED, $res[1][1] );
+		$this->assertEquals( HTMLDiff::ADDED, $res[2][1] );
 	}
 
-	public function testDiffEngine2()
+	/**
+	 * Test that body tag diff can be found
+	 */
+	public function testGetBodyDiffTextual()
 	{
-		$differ = new Differ;
-		$diff= $differ->diffToArray('<html>string one</html>', '<html>string two</html>');
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+abc
+</body>
+</html>
+HTML;
 
-		var_export( $diff );
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+def
+</body>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedDiffTextual( $from, $to, 'body' );
+		$this->assertContains( '-abc', $res );
+		$this->assertContains( '+def', $res );
 	}
 
-	public function testFineDiff()
+	/**
+	 * Test that html tag diff can be found
+	 */
+	public function testGetHtmlDiffArray()
 	{
-		$granularity = new Character();
-		$granularity = new Word();
-		$granularity = new Sentence();
-		$granularity = new Paragraph();
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batman</title>
+</head>
+<body></body>
+</html>
+HTML;
 
-		$renderer = new Html();
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Joker</title>
+</head>
+<body></body>
+</html>
+HTML;
 
-		$diff = new FineDiff( $granularity, $renderer );
-		echo $diff->render('string one', 'string two');
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedDiffArray( $from, $to, 'html' );
+		$this->assertCount( 6, $res );
+		$this->assertEquals( HTMLDiff::REMOVED, $res[2][1] );
+		$this->assertEquals( HTMLDiff::ADDED, $res[3][1] );
+		$this->assertContains( '<title>Joker</title>', $res[3][0] );
+	}
+
+	/**
+	 * Test that the contents are removed if the tag cannot be found in
+	 * the second snippet
+	 */
+	public function testBadMismatchHtmlDiffArray()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>{}</script>
+</head>
+</html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Joker</title>
+</head>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedDiffArray( $from, $to, 'script' );
+		$this->assertCount( 1, $res );
+		$this->assertEquals( HTMLDiff::REMOVED, $res[0][1] );
+		$this->assertContains( '{}', $res[0][0] );
+	}
+
+	/**
+	 * Test that if the selector cannot be found in either snippet, then return
+	 * an empty array
+	 */
+	public function testBothMissingHtmlDiffArray()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en"></html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en"></html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedDiffArray( $from, $to, 'h1' );
+		$this->assertCount( 0, $res );
 	}
 }

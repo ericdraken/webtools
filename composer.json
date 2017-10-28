@@ -22,7 +22,8 @@
     "t1gor/robots-txt-parser": "^0.2.3",
     "spatie/ssl-certificate": "^1.11.0",
     "symfony/process": "^3.1",
-    "guzzlehttp/promises": "^1.0"
+    "guzzlehttp/promises": "^1.0",
+    "sebastian/diff": "^2.0.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.3",
