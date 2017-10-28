@@ -264,4 +264,39 @@ HTML;
 		$res = $hd->getSelectedDiffArray( $from, $to, 'h1' );
 		$this->assertCount( 0, $res );
 	}
+
+	/**
+	 * Test that html tag diff can be found
+	 */
+	public function testGetHtmlDiffChangesArray()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batman</title>
+</head>
+<body></body>
+</html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Joker</title>
+</head>
+<body></body>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedDiffChangesArray( $from, $to, 'html' );
+		$this->assertCount( 2, $res );
+		$this->assertEquals( HTMLDiff::REMOVED, $res[0][1] );
+		$this->assertEquals( HTMLDiff::ADDED, $res[1][1] );
+		$this->assertContains( '<title>Joker</title>', $res[1][0] );
+	}
 }

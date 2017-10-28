@@ -64,6 +64,25 @@ class HTMLDiff extends LoggableBase
 	}
 
 	/**
+	 * Return only the changes in a selected html section
+	 *
+	 * @param string $fromHtml
+	 * @param string $toHtml
+	 * @param string $selector
+	 *
+	 * @return array
+	 */
+	public function getSelectedDiffChangesArray( string $fromHtml, string $toHtml, string $selector )
+	{
+		$diffs = $this->getSelectedDiffArray( $fromHtml, $toHtml, $selector );
+		return array_values(    // Reset the indices
+			array_filter( $diffs, function( $elem ) {
+				return $elem[1] !== self::UNCHANGED;
+			} )
+		);
+	}
+
+	/**
 	 * Get the selected part of the html if present
 	 *
 	 * @param string $html
