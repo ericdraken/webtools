@@ -142,6 +142,48 @@ HTML;
 	}
 
 	/**
+	 * Test that only the first tag selected if multiple are
+	 * present is diffed. In this test, only the first P is matched
+	 */
+	public function testGetMultipleSelectedDiffArray()
+	{
+		$from = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p>Batman</p>
+<p>Robin</p>
+</body>
+</html>
+HTML;
+
+		$to = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p>Joker</p>
+<p>Quinn</p>
+</body>
+</html>
+HTML;
+
+		$hd = new HTMLDiff();
+		$res = $hd->getSelectedDiffArray( $from, $to, 'p' );
+		$this->assertCount( 2, $res );
+		$this->assertEquals( HTMLDiff::REMOVED, $res[0][1] );
+		$this->assertEquals( HTMLDiff::ADDED, $res[1][1] );
+		$this->assertContains( 'Joker', $res[1][0] );
+	}
+
+	/**
 	 * Test that body tag diff can be found
 	 */
 	public function testGetBodyDiffTextual()
