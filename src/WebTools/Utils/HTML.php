@@ -13,24 +13,41 @@ use Symfony\Component\DomCrawler\Crawler;
 class HTML
 {
 	/**
-	 * Get the selected part of the html if present
+	 * Get the selected part of the html if present. If multiple
+	 * elements are selected, then only the first element
+	 * in the list will be returned
 	 *
 	 * @param string $html
 	 *
-	 * @param string $selector
+	 * @param string|null $selector
 	 *
-	 * @return string|bool
+	 * @return string|false
 	 */
-	public static function getSelectedHtml( string $html, string $selector )
+	public static function getSelectedHtml( string $html, string $selector = null )
+	{
+		// Get the from body HTML
+		$elem = self::getSelectedNodes( $html, $selector );
+		if ( $elem->count() ) {
+			return $elem->first()->html();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the selected nodes of the html string if present
+	 *
+	 * @param string $html
+	 *
+	 * @param string|null $selector
+	 *
+	 * @return Crawler
+	 */
+	public static function getSelectedNodes( string $html, string $selector = null ): Crawler
 	{
 		// Get the from body HTML
 		$crawler = new Crawler();
 		$crawler->addHtmlContent( $html );
-		$elem = $crawler->filter( $selector );
-		if ( $elem->count() ) {
-			return $elem->html();
-		}
-
-		return false;
+		return ! is_null( $selector ) ? $crawler->filter( $selector ) : $crawler;
 	}
 }
